@@ -79,16 +79,6 @@ def upgrade() -> None:
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('user_id')
     )
-    op.create_index(
-        "ix_email_verification_tokens_user_id",
-        "email_verification_tokens",
-        ["user_id"],
-    )
-    op.create_index(
-        "ix_refresh_tokens_user_id",
-        "refresh_tokens",
-        ["user_id"],
-    )
     # ### end Alembic commands ###
 
 
@@ -102,14 +92,5 @@ def downgrade() -> None:
     op.drop_table('email_verification_tokens')
     op.drop_index(op.f('ix_users_phone_number'), table_name='users')
     op.drop_index(op.f('ix_users_email'), table_name='users')
-    op.create_index(
-        "ix_refresh_tokens_user_id",
-        "refresh_tokens",
-        ["user_id"],
-    )
-    op.drop_index(
-        "ix_email_verification_tokens_user_id",
-        table_name="email_verification_tokens",
-    )
     op.drop_table('users')
     # ### end Alembic commands ###

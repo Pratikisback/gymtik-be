@@ -57,3 +57,12 @@ class TokenResponse(BaseModel):
 
 class VerifyEmailRequest(BaseModel):
     token: str
+    
+
+class RefreshTokenRequest(BaseModel):
+    refresh_token: str
+
+
+class AccessTokenResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"

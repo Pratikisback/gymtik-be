@@ -1,10 +1,11 @@
 from datetime import UTC, datetime, timedelta
 
 import jwt
+from fastapi import HTTPException, status
+from jwt import ExpiredSignatureError, InvalidTokenError
 from pwdlib import PasswordHash
 
 from app.core.config import settings
-
 
 password_hash = PasswordHash.recommended()
 
@@ -60,4 +61,54 @@ def create_refresh_token(
         payload,
         settings.jwt.secret_key,
         algorithm=settings.jwt.algorithm,
+    )
+
+
+def _decode_token(
+    token: str,
+    expected_type: str,
+) -> dict:
+    try:
+        payload = jwt.decode(
+            token,
+            settings.jwt.secret_key,
+            algorithms=[settings.jwt.algorithm],
+        )
+
+    except ExpiredSignatureError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token has expired.",
+        )
+
+    except InvalidTokenError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid token.",
+        )
+
+    if payload.get("type") != expected_type:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid token type.",
+        )
+
+    return payload
+
+
+def decode_access_token(
+    token: str,
+) -> dict:
+    return _decode_token(
+        token,
+        "access",
+    )
+
+
+def decode_refresh_token(
+    token: str,
+) -> dict:
+    return _decode_token(
+        token,
+        "refresh",
     )

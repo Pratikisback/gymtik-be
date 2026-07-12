@@ -6,6 +6,8 @@ from app.modules.auth.schemas import (
     LoginRequest,
     RegisterRequest,
     RegisterResponse,
+    AccessTokenResponse,
+    RefreshTokenRequest,
     TokenResponse,
 )
 from app.modules.auth.service import AuthService
@@ -45,3 +47,16 @@ def login(
     db: Session = Depends(get_db),
 ):
     return AuthService(db).login(request)
+
+
+@router.post(
+    "/refresh",
+    response_model=AccessTokenResponse,
+)
+def refresh_token(
+    request: RefreshTokenRequest,
+    db: Session = Depends(get_db),
+):
+    return AuthService(db).refresh_access_token(
+        request.refresh_token,
+    )

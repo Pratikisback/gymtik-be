@@ -5,10 +5,10 @@ from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
-from app.core.security import hash_password
+from app.core.security import hash_password, decode_access_token, decode_refresh_token
 from app.modules.auth.model import EmailVerificationToken
 from app.modules.auth.repository import AuthRepository
-from app.modules.auth.schemas import RegisterRequest, RegisterResponse, LoginRequest, TokenResponse
+from app.modules.auth.schemas import RegisterRequest, RegisterResponse, LoginRequest, TokenResponse, RefreshTokenRequest, AccessTokenResponse
 from app.modules.user.model import User
 from app.tasks.email import send_email_task
 import hashlib
@@ -201,4 +201,57 @@ class AuthService:
         )
                 
                 
-                
+    def refresh_access_token(
+        self,
+        refresh_token: str,
+    ) -> AccessTokenResponse:
+
+        payload = decode_refresh_token(
+            refresh_token,
+        )
+        user_id = int(payload["sub"])
+        token_hash = hashlib.sha256(
+            refresh_token.encode(),
+        ).hexdigest()
+
+        refresh_token_model = (
+            self.repository.get_refresh_token(
+                token_hash,
+            )
+        )
+        
+        if refresh_token_model.user_id != user_id:
+            raise HTTPException(
+                status_code=401,
+                detail="Invalid refresh token.",
+            )
+
+        if refresh_token_model is None:
+            raise HTTPException(
+                status_code=401,
+                detail="Invalid refresh token.",
+            )
+
+        if refresh_token_model.expires_at < datetime.now(UTC):
+            raise HTTPException(
+                status_code=401,
+                detail="Refresh token expired.",
+            )
+
+        user = self.repository.get_user_by_id(
+            refresh_token_model.user_id,
+        )
+
+        if user is None or not user.is_active:
+            raise HTTPException(
+                status_code=401,
+                detail="Invalid refresh token.",
+            )
+
+        access_token = create_access_token(
+            user.id,
+        )
+
+        return AccessTokenResponse(
+            access_token=access_token,
+        )

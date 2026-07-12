@@ -27,6 +27,7 @@ class EmailVerificationToken(Base, TimestampMixin):
     user_id: Mapped[int] = mapped_column(
         ForeignKey("users.id", ondelete="CASCADE"),
         nullable=False,
+        index=True,
     )
 
     token: Mapped[str] = mapped_column(
@@ -61,6 +62,7 @@ class RefreshToken(Base, TimestampMixin):
     user_id: Mapped[int] = mapped_column(
         ForeignKey("users.id", ondelete="CASCADE"),
         nullable=False,
+        index=True,
     )
 
     token_hash: Mapped[str] = mapped_column(
