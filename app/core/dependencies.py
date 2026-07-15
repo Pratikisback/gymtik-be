@@ -6,6 +6,9 @@ from app.core.security import decode_access_token
 from app.db.database import get_db
 from app.modules.auth.repository import AuthRepository
 from app.modules.user.model import User
+from app.ai.ingestion.ingestion_service import ExerciseIngestionService
+
+
 
 oauth2_scheme = OAuth2PasswordBearer(
     tokenUrl="/api/v1/auth/login",
@@ -38,3 +41,6 @@ def get_current_user(
         )
 
     return user
+
+def get_exercise_ingestion_service() -> ExerciseIngestionService:
+    return ExerciseIngestionService()
